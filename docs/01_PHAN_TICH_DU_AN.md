@@ -95,9 +95,10 @@ nó đã hỗ trợ **nhiều kết nối P2P đồng thời**, mỗi kết nố
 ```
 
 - `server/index.js` — **Signaling Server**: quản lý peer online (cấp ID, avatar/tên
-  cầu thủ theo chủ đề World Cup 2026), relay SDP Offer/Answer + ICE candidate.
-  Đây **không phải tracker theo file** — nó không biết peer nào đang giữ file nào,
-  chỉ biết "ai đang online".
+  cầu thủ theo chủ đề World Cup 2026 — danh sách rút gọn trong `server/utils.js`,
+  chỉ gồm 4 đội Argentina, Anh, Pháp, Tây Ban Nha), relay SDP Offer/Answer + ICE
+  candidate. Đây **không phải tracker theo file** — nó không biết peer nào đang
+  giữ file nào, chỉ biết "ai đang online".
 - `public/webrtc.js` — lớp `PeerConnection` (1 kết nối) + `WebRTCHandler` (quản lý
   nhiều `PeerConnection` cùng lúc). Chia file thành chunk 16KB, mỗi chunk kèm
   **SHA-256 hash riêng** trong frame nhị phân `[chunkIdx][fileId][hash][data]`.

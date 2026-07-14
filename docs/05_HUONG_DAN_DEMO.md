@@ -74,12 +74,14 @@ gian giới thiệu.
 1. Với torrent đang có, bấm **"⬇ Tải xuống" 2–3 lần liên tiếp** để tạo thêm
    nhiều leecher cùng tải 1 lúc.
 2. **Quan sát khi các leecher đang tải dở (chưa tới 100%):**
-   - Cột **"↓ tốc độ"**: mỗi leecher đang nhận dữ liệu.
+   - Cột **"↓ Tải xuống"**: mỗi leecher đang nhận dữ liệu (tốc độ tức thời;
+     khi đã xong hiển thị nhãn `TB` kèm tốc độ trung bình cả quá trình).
    - Cột **"Nguồn"**: số này **tăng dần lên >1** — nghĩa là 1 leecher đang kéo
      chunk từ **nhiều peer khác nhau cùng lúc** (không chỉ từ seed gốc).
-   - Cột **"↑ tốc độ"** của các leecher khác (không phải seed) cũng **>0** —
+   - Cột **"↑ Chia sẻ"** của các leecher khác (không phải seed) cũng **>0** —
      nghĩa là leecher đó đang **tải chưa xong nhưng đã bắt đầu phục vụ ngược
-     lại** chunk mình có cho leecher khác.
+     lại** chunk mình có cho leecher khác (khi không ai xin chunk, cột này hiện
+     nhãn `Tổng` kèm tổng dung lượng đã chia sẻ, thay vì về 0 gây hiểu lầm).
 
 **→ Giải thích:** đây là "trái tim" của BitTorrent — khác hẳn tải file kiểu
 client–server (luôn 1 nguồn), ở đây **càng nhiều người tải, tổng băng thông
@@ -97,9 +99,10 @@ Không có nút riêng cho bước này vì nó chạy **ngầm, tự động, v
 1. Mở `bittorrent/peer/peer.js`, hàm `_onPiece()` — chỉ cho giảng viên thấy
    dòng `verifyChunk(this.meta, index, data)`: mỗi khi nhận 1 mảnh, peer tính
    lại SHA-256 và so với hash đã lưu trong metadata **trước khi ghi vào đĩa**.
-2. Bằng chứng gián tiếp trên UI: mọi peer đạt trạng thái **"✓ xong"** đều đã
-   đi qua bước verify này cho **toàn bộ** chunk — nếu 1 chunk sai hash, nó sẽ
-   bị loại và tải lại tự động (xem `bad-chunk` / `timeout-chunk` trong log nếu
+2. Bằng chứng gián tiếp trên UI: mọi peer tải xong đều hiện **icon ✓ nhỏ cạnh
+   badge SEED/LEECH** (rê chuột hiện tooltip "Đã hoàn tất") — chứng tỏ đã đi
+   qua bước verify này cho **toàn bộ** chunk; nếu 1 chunk sai hash, nó sẽ bị
+   loại và tải lại tự động (xem `bad-chunk` / `timeout-chunk` trong log nếu
    chạy qua CLI/harness — mục D).
 3. **Cách chứng minh chắc chắn nhất:** tải file về (bước B7), rồi dùng công cụ
    tính hash bất kỳ (CertUtil trên Windows, hoặc `Get-FileHash`) so với file
@@ -111,7 +114,7 @@ Không có nút riêng cho bước này vì nó chạy **ngầm, tự động, v
 
 ### B7. Ghép các chunk để tạo lại file hoàn chỉnh
 
-1. Với 1 peer LEECH đã đạt **"✓ xong" (100%)**, bấm nút **"Tải file"**.
+1. Với 1 peer LEECH đã đạt **icon ✓ "Đã hoàn tất" (100%)**, bấm nút **"Tải file"**.
 2. Trình duyệt tải file về máy — mở ra xem đúng nội dung (ảnh xem được, video
    phát được, zip giải nén được...).
 
@@ -171,7 +174,7 @@ Mỗi lệnh tự dựng 1 tracker + nhiều peer, in bảng tóm tắt, và ghi
 | Chức năng | Cách chỉ ra |
 |-----------|-------------|
 | **Rarest-first** | Giải thích khái niệm (ưu tiên tải chunk hiếm nhất trước) + chạy Phần D để có số liệu so sánh |
-| **Thống kê tốc độ up/down** | Đã thấy trực tiếp ở cột "↓ tốc độ" / "↑ tốc độ" trong Phần B4 |
+| **Thống kê tốc độ up/down** | Đã thấy trực tiếp ở cột "↓ Tải xuống" / "↑ Chia sẻ" trong Phần B4 |
 | **Giao diện (GUI)** | Cả app WebRTC gốc **và** dashboard mới — 2 giao diện, chuyển qua lại bằng nút bấm (Phần A) |
 | **Mô phỏng churn** | Đã demo trực tiếp ở Phần C; ngoài ra `harness/scenarios/churn.json` (Phần D) mô phỏng tự động theo lịch |
 
