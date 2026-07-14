@@ -146,8 +146,9 @@ npm run dev
 | `http://localhost:5000/`            | App WebRTC P2P Transfer    |
 | `http://localhost:5000/bittorrent/` | Dashboard BitTorrent-swarm |
 
-Hướng dẫn chi tiết từng bước (cho người mới clone lần đầu, kèm xử lý sự cố):
-[`docs/07_HUONG_DAN_CAI_DAT.md`](docs/07_HUONG_DAN_CAI_DAT.md).
+Hướng dẫn cài đặt chi tiết, kiến trúc, kịch bản thử nghiệm và hướng dẫn demo
+đều được gộp vào báo cáo tiểu luận:
+[`docs/CHTPT_Nhóm_10_Hệ thống chia sẻ file ngang hàng (P2P).docx`](docs/).
 
 **Chạy kịch bản đo hiệu năng (không cần mở web):**
 
@@ -189,7 +190,9 @@ node harness/run-experiment.js harness/scenarios/baseline.json
 
 ## Tài liệu chi tiết
 
-Xem [`docs/README.md`](docs/README.md) — bắt đầu từ [`docs/06_GIOI_THIEU_DU_AN.md`](docs/06_GIOI_THIEU_DU_AN.md) để có tổng quan đầy đủ, phân tích kỹ thuật, kịch bản đo hiệu năng và hướng dẫn demo.
+Toàn bộ tài liệu (tổng quan, phân tích kỹ thuật, kịch bản đo hiệu năng, hướng
+dẫn cài đặt và demo) được gộp thành một báo cáo tiểu luận duy nhất, xem trong
+thư mục [`docs/`](docs/).
 
 ---
 
