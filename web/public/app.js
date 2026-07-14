@@ -3,20 +3,25 @@
 const $ = (sel) => document.querySelector(sel);
 const fmtBytes = (b) => {
   if (!b) return "0 B";
-  const k = 1024, sizes = ["B", "KB", "MB", "GB"];
+  const k = 1024,
+    sizes = ["B", "KB", "MB", "GB"];
   const i = Math.floor(Math.log(b) / Math.log(k));
   return (b / k ** i).toFixed(i ? 1 : 0) + " " + sizes[i];
 };
 // Chuyển KB/s -> MB/s khi số quá lớn để hiển thị gọn trong cột hẹp
 // (vd "120773 KB/s" -> "118.0 MB/s"), tránh bị cắt/tràn chữ.
-const fmtRate = (kbps) => (kbps >= 1000 ? (kbps / 1024).toFixed(1) + " MB/s" : Math.round(kbps) + " KB/s");
+const fmtRate = (kbps) =>
+  kbps >= 1000
+    ? (kbps / 1024).toFixed(1) + " MB/s"
+    : Math.round(kbps) + " KB/s";
 
 // Lưu snapshot lần poll trước để tính tốc độ tức thời (delta byte / delta thời gian).
 const prevSnapshot = new Map(); // peerId -> { bytesDown, bytesUp, t }
 
 async function loadConfig() {
   const cfg = await fetch("api/config").then((r) => r.json());
-  $("#config").textContent = `${cfg.trackerUrl} · chunk mặc định ${fmtBytes(cfg.defaultChunkSize)}`;
+  $("#config").textContent =
+    `${cfg.trackerUrl} · chunk mặc định ${fmtBytes(cfg.defaultChunkSize)}`;
 }
 
 async function loadTorrents() {
@@ -41,7 +46,9 @@ async function loadTorrents() {
     tbody.appendChild(tr);
   }
   tbody.querySelectorAll("[data-download]").forEach((btn) => {
-    btn.addEventListener("click", () => startDownload(btn.dataset.download, btn));
+    btn.addEventListener("click", () =>
+      startDownload(btn.dataset.download, btn),
+    );
   });
   tbody.querySelectorAll("[data-seed]").forEach((btn) => {
     btn.addEventListener("click", () => reseed(btn.dataset.seed, btn));
@@ -62,7 +69,12 @@ async function reseed(infohash, btn) {
 }
 
 async function deleteTorrent(infohash, btn) {
-  if (!confirm("Xoá torrent này? Mọi peer (seed/leech) đang phục vụ nó sẽ bị dừng, file gốc trên server sẽ bị xoá.")) return;
+  if (
+    !confirm(
+      "Xoá torrent này? Mọi peer (seed/leech) đang phục vụ nó sẽ bị dừng, file gốc trên server sẽ bị xoá.",
+    )
+  )
+    return;
   btn.disabled = true;
   try {
     await fetch(`api/torrents/${infohash}`, { method: "DELETE" });
@@ -95,7 +107,8 @@ async function loadPeers() {
 
   for (const p of list) {
     const prev = prevSnapshot.get(p.id);
-    let downKBps = 0, upKBps = 0;
+    let downKBps = 0,
+      upKBps = 0;
     if (prev) {
       const dt = (now - prev.t) / 1000;
       if (dt > 0) {
@@ -103,35 +116,46 @@ async function loadPeers() {
         upKBps = Math.max(0, (p.bytesUp - prev.bytesUp) / 1024 / dt);
       }
     }
-    prevSnapshot.set(p.id, { bytesDown: p.bytesDown, bytesUp: p.bytesUp, t: now });
+    prevSnapshot.set(p.id, {
+      bytesDown: p.bytesDown,
+      bytesUp: p.bytesUp,
+      t: now,
+    });
 
-    const roleBadge = p.role === "seed" ? '<span class="badge seed">SEED</span>' : '<span class="badge leech">LEECH</span>';
+    const roleBadge =
+      p.role === "seed"
+        ? '<span class="badge seed">SEED</span>'
+        : '<span class="badge leech">LEECH</span>';
     // Icon nhỏ (không phải badge chữ "xong") để không làm ô "Vai trò" giãn to —
     // tooltip giải thích ý nghĩa khi rê chuột.
-    const doneBadge = p.complete ? '<span class="badge-check" title="Đã hoàn tất">✓</span>' : "";
+    const doneBadge = p.complete
+      ? '<span class="badge-check" title="Đã hoàn tất">✓</span>'
+      : "";
 
     // Cột tốc độ tải xuống: đang tải → tốc độ tức thời; đã xong → tốc độ TRUNG
     // BÌNH cả quá trình (bytesDown/thời gian) thay vì để tụt về 0 gây hiểu lầm
-    // là "không tải được gì". Dùng ký hiệu "⌀" (trung bình) thay vì chữ "TB "
-    // để không tràn chữ ra ngoài ô hẹp — giải thích qua tooltip title.
-    let downCell = "-", downTitle = "";
+    // là "không tải được gì". Dùng nhãn chữ "TB" (thay vì ký hiệu toán học ⌀)
+    // để người dùng không quen ký hiệu vẫn hiểu ngay, kèm tooltip giải thích.
+    let downCell = "-",
+      downTitle = "";
     if (p.role === "leech") {
       if (!p.complete) {
         downCell = fmtRate(downKBps);
       } else if (p.ms > 0) {
-        downCell = "⌀ " + fmtRate((p.bytesDown / 1024) / (p.ms / 1000));
         downTitle = "Tốc độ trung bình cả quá trình tải";
+        downCell = `<span class="rate-tag" title="${downTitle}">TB</span>${fmtRate(p.bytesDown / 1024 / (p.ms / 1000))}`;
       }
     }
-    // Cột tốc độ upload: đang có người tải từ mình → tốc độ tức thời; nếu hiện
+    // Cột tốc độ chia sẻ: đang có người tải từ mình → tốc độ tức thời; nếu hiện
     // tại không ai đang xin chunk (tốc độ tức thời = 0) nhưng đã từng phục vụ
-    // → hiện tổng dung lượng đã upload (ký hiệu "Σ"), tránh hiểu lầm "không hoạt động".
-    let upCell = "-", upTitle = "";
+    // → hiện tổng dung lượng đã chia sẻ (nhãn "Tổng"), tránh hiểu lầm "không hoạt động".
+    let upCell = "-",
+      upTitle = "";
     if (upKBps > 0) {
       upCell = fmtRate(upKBps);
     } else if (p.bytesUp > 0) {
-      upCell = "Σ " + fmtBytes(p.bytesUp);
-      upTitle = "Tổng dung lượng đã upload";
+      upTitle = "Tổng dung lượng đã chia sẻ";
+      upCell = `<span class="rate-tag" title="${upTitle}">Tổng</span>${fmtBytes(p.bytesUp)}`;
     }
 
     const tr = document.createElement("tr");
@@ -164,7 +188,13 @@ async function loadPeers() {
 }
 
 function escapeHtml(s) {
-  return String(s).replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+  return String(s).replace(
+    /[&<>"']/g,
+    (c) =>
+      ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[
+        c
+      ],
+  );
 }
 
 $("#uploadForm").addEventListener("submit", async (e) => {

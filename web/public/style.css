@@ -258,13 +258,21 @@ tbody tr:hover { background: rgba(245, 166, 35, .04); }
   background: var(--green-dim); color: var(--green); border: 1px solid rgba(34, 197, 94, .35);
 }
 
-/* Chú giải ký hiệu dùng trong bảng (⌘ = trung bình, Σ = tổng, ✓ = hoàn tất)
-   để người dùng không thắc mằc ý nghĩa cột tốc độ. */
+/* Chú giải ký hiệu dùng trong bảng (TB = trung bình, Tổng = tổng, ✓ = hoàn tất)
+   để người dùng không thắc mắc ý nghĩa cột tốc độ. */
 .table-legend {
   margin: 8px 2px 0; font-size: 0.78rem; color: var(--text3);
 }
 .table-legend span { color: var(--text2); font-weight: 700; }
 .table-legend .legend-check { color: var(--green); }
+
+/* Nhãn nhỏ đứng trước giá trị tốc độ (thay ký hiệu toán học ⌀/Σ khó hiểu bằng
+   chữ Việt "TB"/"Tổng") — giống phong cách badge, dễ hiểu ngay không cần tooltip. */
+.rate-tag {
+  display: inline-block; margin-right: 4px; padding: 1px 5px; border-radius: 4px;
+  font-size: 9px; font-weight: 700; letter-spacing: .02em; vertical-align: middle;
+  background: rgba(255, 255, 255, .07); color: var(--text3); border: 1px solid var(--border);
+}
 
 .progress {
   position: relative;
