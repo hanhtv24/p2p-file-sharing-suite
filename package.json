@@ -1,7 +1,7 @@
 {
-  "name": "file-transfer-p2p",
-  "version": "1.0.0",
-  "description": "Chia sẻ file trực tiếp peer-to-peer qua WebRTC",
+  "name": "p2p-file-sharing-suite",
+  "version": "2.0.0",
+  "description": "Bo 2 he thong chia se file phan tan: WebRTC P2P Transfer (DataChannel, da peer, SHA-256) + BitTorrent-swarm Engine (tracker, rarest-first, multi-source, chiu churn)",
   "main": "server/index.js",
   "scripts": {
     "start": "node server/index.js",
@@ -11,7 +11,10 @@
     "webrtc",
     "p2p",
     "file-transfer",
-    "peer-to-peer"
+    "peer-to-peer",
+    "bittorrent",
+    "distributed-systems",
+    "swarm"
   ],
   "author": "",
   "license": "MIT",
