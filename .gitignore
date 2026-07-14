@@ -28,6 +28,7 @@ logs/
 *.docx
 HTTT_*.pdf
 Bài\ tập\ lớn.*
+docs/KIEM_THU_WEBRTC.md
 
 # Hệ thống BitTorrent-like (bittorrent/ + harness/): file test/kết quả sinh khi chạy
 harness/tmp/
