@@ -131,7 +131,19 @@ Nếu cả 4 bước trên đều đúng như mô tả → dự án đã dựng 
 
 ### "Port 5000 đã được sử dụng" / `EADDRINUSE`
 Có chương trình khác (hoặc phiên `npm run dev` cũ chưa tắt hẳn) đang chiếm
-cổng 5000. Cách xử lý:
+cổng 5000.
+
+> **Trên macOS, đây gần như luôn là do AirPlay Receiver** — tính năng có sẵn
+> của macOS (từ Monterey trở lên) mặc định lắng nghe đúng cổng 5000. Không
+> phải lỗi ở dự án. Nhận biết: log vẫn in được dòng `[tracker] đang chạy tại
+> http://localhost:4000` (cổng 4000 không xung đột), chỉ riêng cổng 5000 báo
+> `EADDRINUSE`. Cách xử lý — chọn 1 trong 2:
+> - Tắt AirPlay Receiver: **System Settings → General → AirDrop & Handoff →
+>   tắt "AirPlay Receiver"**, rồi chạy lại `npm run dev` bình thường ở cổng 5000.
+> - Hoặc đơn giản hơn, đổi sang cổng khác (xem lệnh bên dưới) — không cần đổi
+>   cài đặt hệ thống.
+
+Cách xử lý chung (mọi hệ điều hành, khi cổng 5000 bị chiếm bởi bất kỳ lý do gì):
 - Đóng hẳn terminal cũ đang chạy server (nếu còn), hoặc
 - Đổi sang cổng khác:
   ```bash
