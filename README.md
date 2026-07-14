@@ -135,8 +135,8 @@ Mô phỏng lại các cơ chế lõi của BitTorrent: cắt file thành chunk 
 **Yêu cầu:** Node.js 16+, Chrome / Firefox / Edge
 
 ```bash
-git clone https://github.com/hanhtv24/webrtc-p2p-file-transfer.git
-cd webrtc-p2p-file-transfer
+git clone https://github.com/hanhtv24/p2p-file-sharing-suite.git
+cd p2p-file-sharing-suite
 npm install
 npm run dev
 ```
