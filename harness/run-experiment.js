@@ -26,7 +26,8 @@ const RESULTS = path.join(__dirname, "results");
 /** @param {number} ms */
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 /** @param {string} p */
-const sha256File = (p) => crypto.createHash("sha256").update(fs.readFileSync(p)).digest("hex");
+const sha256File = (p) =>
+  crypto.createHash("sha256").update(fs.readFileSync(p)).digest("hex");
 
 /** Bọc 1 tiến trình con: parse stdout tìm dòng sự kiện ##EVT##. */
 class Proc {
@@ -47,7 +48,9 @@ class Proc {
     // thay vì chuỗi "node" tra cứu qua PATH, tránh rủi ro PATH bị thao túng.
     this.child = spawn(process.execPath, [CLI, ...this.args], { cwd: ROOT });
     this.child.stdout.on("data", (d) => this._parse(d));
-    this.child.stderr.on("data", (d) => process.stderr.write(`[${this.label}] ${d}`));
+    this.child.stderr.on("data", (d) =>
+      process.stderr.write(`[${this.label}] ${d}`),
+    );
     return this;
   }
   /** @param {Buffer} d */
@@ -62,7 +65,10 @@ class Proc {
         try {
           this.onEvent(this.label, JSON.parse(line.slice(i + 8)));
         } catch (err) {
-          console.error(`[${this.label}] dòng sự kiện không hợp lệ, bỏ qua:`, err instanceof Error ? err.message : err);
+          console.error(
+            `[${this.label}] dòng sự kiện không hợp lệ, bỏ qua:`,
+            err instanceof Error ? err.message : err,
+          );
         }
       }
     }
@@ -110,10 +116,13 @@ function computeExpectedLeechers(cfg) {
           e.action === "kill" &&
           !cfg.churn.some(
             (/** @type {any} */ r) =>
-              r.action === "restart" && r.target === e.target && r.index === e.index && r.atMs > e.atMs
-          )
+              r.action === "restart" &&
+              r.target === e.target &&
+              r.index === e.index &&
+              r.atMs > e.atMs,
+          ),
       )
-      .map((/** @type {any} */ e) => `${e.target}${e.index}`)
+      .map((/** @type {any} */ e) => `${e.target}${e.index}`),
   );
   const expected = [];
   for (let i = 0; i < cfg.leechers; i++) {
@@ -144,9 +153,14 @@ async function waitForCompletions(expected, completions, timeoutMs) {
  */
 function checkHashMatches(label, outFile, srcHash) {
   try {
-    return !!outFile && fs.existsSync(outFile) && sha256File(outFile) === srcHash;
+    return (
+      !!outFile && fs.existsSync(outFile) && sha256File(outFile) === srcHash
+    );
   } catch (err) {
-    console.error(`[${label}] lỗi khi kiểm tra hash file đích:`, err instanceof Error ? err.message : err);
+    console.error(
+      `[${label}] lỗi khi kiểm tra hash file đích:`,
+      err instanceof Error ? err.message : err,
+    );
     return false;
   }
 }
@@ -178,7 +192,8 @@ function buildRows(expected, completions, outFiles, srcHash) {
 }
 
 async function main() {
-  const scenarioPath = process.argv[2] || path.join(__dirname, "scenarios", "baseline.json");
+  const scenarioPath =
+    process.argv[2] || path.join(__dirname, "scenarios", "baseline.json");
   const cfg = JSON.parse(fs.readFileSync(scenarioPath, "utf8"));
   cfg.name = cfg.name || path.basename(scenarioPath, ".json");
   cfg.fileSizeMB = cfg.fileSizeMB || 4;
@@ -194,7 +209,7 @@ async function main() {
   console.log(`\n=== KỊCH BẢN: ${cfg.name} ===`);
   console.log(
     `file=${cfg.fileSizeMB}MB chunk=${cfg.chunkSize}B seeders=${cfg.seeders} ` +
-      `leechers=${cfg.leechers} strategy=${cfg.strategy}\n`
+      `leechers=${cfg.leechers} strategy=${cfg.strategy}\n`,
   );
 
   fs.mkdirSync(TMP, { recursive: true });
@@ -202,10 +217,21 @@ async function main() {
 
   // 1) Sinh file + metadata
   const srcFile = path.join(TMP, `src-${cfg.name}.bin`);
-  runNode([path.join(__dirname, "gen-file.js"), srcFile, String(cfg.fileSizeMB)]);
+  runNode([
+    path.join(__dirname, "gen-file.js"),
+    srcFile,
+    String(cfg.fileSizeMB),
+  ]);
   const srcHash = sha256File(srcFile);
   const metaPath = path.join(TMP, `${cfg.name}.meta.json`);
-  runCli(["create", srcFile, "--chunk", String(cfg.chunkSize), "--out", metaPath]);
+  runCli([
+    "create",
+    srcFile,
+    "--chunk",
+    String(cfg.chunkSize),
+    "--out",
+    metaPath,
+  ]);
 
   const trackerUrl = `http://localhost:${cfg.trackerPort}`;
   /** @type {any[]} */
@@ -223,13 +249,17 @@ async function main() {
       completions.set(label, e);
       console.log(
         `  ✓ ${label} xong sau ${e.ms}ms | ${(e.bytesDown / 1024).toFixed(0)}KB ` +
-          `| từ ${e.sources} nguồn | throughput ${e.throughputKBps}KB/s | hash ${e.fileOk ? "OK" : "SAI"}`
+          `| từ ${e.sources} nguồn | throughput ${e.throughputKBps}KB/s | hash ${e.fileOk ? "OK" : "SAI"}`,
       );
     }
   };
 
   // 2) Tracker
-  const tracker = new Proc("tracker", ["tracker", "--port", String(cfg.trackerPort)], onEvent).start();
+  const tracker = new Proc(
+    "tracker",
+    ["tracker", "--port", String(cfg.trackerPort)],
+    onEvent,
+  ).start();
   procs.set("tracker", tracker);
   await sleep(500); // chờ tracker sẵn sàng
 
@@ -238,9 +268,20 @@ async function main() {
     const label = `seed${i}`;
     const p = new Proc(
       label,
-      ["seed", srcFile, metaPath, "--tracker", trackerUrl, "--id", label,
-        "--strategy", cfg.strategy, "--throttle", String(cfg.uploadKBps)],
-      onEvent
+      [
+        "seed",
+        srcFile,
+        metaPath,
+        "--tracker",
+        trackerUrl,
+        "--id",
+        label,
+        "--strategy",
+        cfg.strategy,
+        "--throttle",
+        String(cfg.uploadKBps),
+      ],
+      onEvent,
     ).start();
     procs.set(label, p);
   }
@@ -255,9 +296,21 @@ async function main() {
     outFiles.set(label, outFile);
     const p = new Proc(
       label,
-      ["download", metaPath, "--tracker", trackerUrl, "--out", outFile, "--id", label,
-        "--strategy", cfg.strategy, "--throttle", String(cfg.uploadKBps)],
-      onEvent
+      [
+        "download",
+        metaPath,
+        "--tracker",
+        trackerUrl,
+        "--out",
+        outFile,
+        "--id",
+        label,
+        "--strategy",
+        cfg.strategy,
+        "--throttle",
+        String(cfg.uploadKBps),
+      ],
+      onEvent,
     ).start();
     procs.set(label, p);
     return p;
@@ -295,7 +348,10 @@ async function main() {
   printSummary(summary);
   const stamp = new Date().toISOString().replace(/[:.]/g, "-");
   const base = path.join(RESULTS, `${cfg.name}-${stamp}`);
-  fs.writeFileSync(base + ".json", JSON.stringify({ summary, events }, null, 2));
+  fs.writeFileSync(
+    base + ".json",
+    JSON.stringify({ summary, events }, null, 2),
+  );
   fs.writeFileSync(base + ".csv", toCsv(rows));
   console.log(`\n📁 Kết quả: ${base}.json / .csv`);
 
@@ -312,13 +368,27 @@ function printSummary(s) {
   console.log(`  Hash khớp: ${s.allHashOk ? "TẤT CẢ OK ✓" : "CÓ LỖI ✗"}`);
   console.log(`  Thời gian: ${s.wallClockMs ?? "-"}ms (peer chậm nhất)`);
   console.log(`  Throughput TB: ${s.avgThroughputKBps} KB/s`);
-  console.log(`  Số nguồn tối đa 1 leecher dùng: ${s.maxSources} (chứng minh tải đa nguồn)`);
+  console.log(
+    `  Số nguồn tối đa 1 leecher dùng: ${s.maxSources} (chứng minh tải đa nguồn)`,
+  );
 }
 
 /** @param {any[]} rows */
 function toCsv(rows) {
-  const cols = ["label", "completed", "ms", "bytesDown", "bytesUp", "sources", "throughputKBps", "hashMatchesSource"];
-  return [cols.join(","), ...rows.map((/** @type {any} */ r) => cols.map((c) => r[c]).join(","))].join("\n");
+  const cols = [
+    "label",
+    "completed",
+    "ms",
+    "bytesDown",
+    "bytesUp",
+    "sources",
+    "throughputKBps",
+    "hashMatchesSource",
+  ];
+  return [
+    cols.join(","),
+    ...rows.map((/** @type {any} */ r) => cols.map((c) => r[c]).join(",")),
+  ].join("\n");
 }
 
 /** @param {string[]} args */

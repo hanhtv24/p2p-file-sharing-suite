@@ -62,7 +62,10 @@ function parsePart(rawPart, fields, files) {
   if (!name) return;
 
   if (filenameMatch?.[1]) {
-    files[name] = { filename: path.basename(filenameMatch[1]), buffer: Buffer.from(body) };
+    files[name] = {
+      filename: path.basename(filenameMatch[1]),
+      buffer: Buffer.from(body),
+    };
   } else {
     fields[name] = body.toString("utf8");
   }
@@ -290,7 +293,10 @@ function createBittorrentRouter({ trackerUrl }) {
         force: true,
       });
     } catch (err) {
-      console.error(`[bittorrent-api] không xóa được thư mục torrent ${req.params.infohash}:`, err instanceof Error ? err.message : err);
+      console.error(
+        `[bittorrent-api] không xóa được thư mục torrent ${req.params.infohash}:`,
+        err instanceof Error ? err.message : err,
+      );
     }
     torrents.delete(req.params.infohash);
     res.json({ ok: true });

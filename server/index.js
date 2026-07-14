@@ -47,7 +47,7 @@ io.on("connection", (socket) => {
   console.log(
     `[${new Date().toLocaleTimeString()}] Peer kết nối: ${avatar.emoji} ${
       avatar.name
-    } ${peerId} | ${deviceInfo.icon} ${deviceInfo.device} (IP: ${clientIP})`
+    } ${peerId} | ${deviceInfo.icon} ${deviceInfo.device} (IP: ${clientIP})`,
   );
 
   // Lưu thông tin peer
@@ -85,7 +85,7 @@ io.on("connection", (socket) => {
       console.log(
         `[${new Date().toLocaleTimeString()}] ${peerId} đổi tên thành: ${
           peer.name
-        }`
+        }`,
       );
       broadcastPeerList();
       socket.emit("name-changed", peer.name);
@@ -99,7 +99,7 @@ io.on("connection", (socket) => {
     const targetSocket = findSocketByPeerId(targetPeerId);
     if (targetSocket) {
       console.log(
-        `[${new Date().toLocaleTimeString()}] ${peerId} muốn kết nối với ${targetPeerId}`
+        `[${new Date().toLocaleTimeString()}] ${peerId} muốn kết nối với ${targetPeerId}`,
       );
       // Thông báo cho peer đích
       targetSocket.emit("connection-request", {
@@ -118,7 +118,7 @@ io.on("connection", (socket) => {
       console.log(
         `[${new Date().toLocaleTimeString()}] Relay SDP Offer: ${peerId} -> ${
           peers.get(targetSocketId)?.id
-        }`
+        }`,
       );
       targetSocket.emit("sdp-offer", {
         sdp,
@@ -135,7 +135,7 @@ io.on("connection", (socket) => {
       console.log(
         `[${new Date().toLocaleTimeString()}] Relay SDP Answer: ${peerId} -> ${
           peers.get(targetSocketId)?.id
-        }`
+        }`,
       );
       targetSocket.emit("sdp-answer", {
         sdp,
@@ -165,7 +165,7 @@ io.on("connection", (socket) => {
       console.log(
         `[${new Date().toLocaleTimeString()}] Yêu cầu gửi file: ${
           fileInfo.name
-        } (${formatBytes(fileInfo.size)})`
+        } (${formatBytes(fileInfo.size)})`,
       );
       targetSocket.emit("file-request", {
         fileInfo,
@@ -180,7 +180,7 @@ io.on("connection", (socket) => {
     const targetSocket = io.sockets.sockets.get(targetSocketId);
     if (targetSocket) {
       console.log(
-        `[${new Date().toLocaleTimeString()}] Chấp nhận nhận file từ ${peerId}`
+        `[${new Date().toLocaleTimeString()}] Chấp nhận nhận file từ ${peerId}`,
       );
       targetSocket.emit("file-accepted", {
         fromSocketId: socket.id,
@@ -202,7 +202,7 @@ io.on("connection", (socket) => {
 
   socket.on("disconnect", () => {
     console.log(
-      `[${new Date().toLocaleTimeString()}] Peer ngắt kết nối: ${peerId}`
+      `[${new Date().toLocaleTimeString()}] Peer ngắt kết nối: ${peerId}`,
     );
     peers.delete(socket.id);
     broadcastPeerList();
@@ -248,10 +248,10 @@ async function startBittorrent() {
 startBittorrent().then((trackerServer) => {
   server.listen(PORT, () => {
     console.log(
-      `║   Server đang chạy tại: http://localhost:${PORT}             ║`
+      `║   Server đang chạy tại: http://localhost:${PORT}             ║`,
     );
     console.log(
-      `║   Hệ BitTorrent-swarm : http://localhost:${PORT}/bittorrent/  ║`
+      `║   Hệ BitTorrent-swarm : http://localhost:${PORT}/bittorrent/  ║`,
     );
   });
 

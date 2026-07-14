@@ -108,7 +108,11 @@ function computeSpeeds(p, now) {
       upKBps = Math.max(0, (p.bytesUp - prev.bytesUp) / 1024 / dt);
     }
   }
-  prevSnapshot.set(p.id, { bytesDown: p.bytesDown, bytesUp: p.bytesUp, t: now });
+  prevSnapshot.set(p.id, {
+    bytesDown: p.bytesDown,
+    bytesUp: p.bytesUp,
+    t: now,
+  });
   return { downKBps, upKBps };
 }
 
@@ -135,7 +139,10 @@ function buildDownCell(p, downKBps) {
   if (p.ms > 0) {
     const title = "Tốc độ trung bình cả quá trình tải";
     const rate = fmtRate(p.bytesDown / 1024 / (p.ms / 1000));
-    return { cell: `<span class="rate-tag" title="${title}">TB</span>${rate}`, title };
+    return {
+      cell: `<span class="rate-tag" title="${title}">TB</span>${rate}`,
+      title,
+    };
   }
   return { cell: "-", title: "" };
 }
@@ -147,7 +154,10 @@ function buildUpCell(p, upKBps) {
   if (upKBps > 0) return { cell: fmtRate(upKBps), title: "" };
   if (p.bytesUp > 0) {
     const title = "Tổng dung lượng đã chia sẻ";
-    return { cell: `<span class="rate-tag" title="${title}">Tổng</span>${fmtBytes(p.bytesUp)}`, title };
+    return {
+      cell: `<span class="rate-tag" title="${title}">Tổng</span>${fmtBytes(p.bytesUp)}`,
+      title,
+    };
   }
   return { cell: "-", title: "" };
 }
