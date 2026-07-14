@@ -214,19 +214,38 @@ nặng I/O như P2P, và thoả yêu cầu "xử lý đồng thời" của đề
 song thực sự trên nhiều CPU có thể dùng `worker_threads`, nhưng không cần cho bài
 toán này.)
 
-### 4.6. Giao diện Web cho hệ thống mới (`web/`)
+### 4.6. Giao diện Web cho hệ thống mới (`web/`) — gộp chung vào app WebRTC
+
 Peer của hệ mới là tiến trình CLI (không có màn hình), nên để có **GUI** như đề
-bài khuyến khích, `web/server.js` import thẳng các module `Peer`/`Tracker`/
-`torrent` và chạy chúng **trong cùng tiến trình** với 1 web server (không dùng
-framework, chỉ module built-in). Người dùng:
+bài khuyến khích, `web/api.js` import thẳng các module `Peer`/`torrent` và chạy
+chúng **trong cùng tiến trình** với web server, xuất ra dưới dạng 1 **Express
+Router** (không dùng framework riêng cho phần lõi P2P). Router này được **gắn
+vào cùng server chính** (`server/index.js`, cổng 5000) dưới đường dẫn
+`/bittorrent`, nên chỉ cần chạy **1 lệnh** (`npm run dev`) là có cả 2 giao diện:
+
+```
+http://localhost:5000/              → app WebRTC gốc (đa peer, chunk-map, SHA-256)
+http://localhost:5000/bittorrent/   → dashboard hệ BitTorrent-swarm mới
+```
+
+Ở header app gốc có nút **"🧲 BitTorrent Engine"** để bấm chuyển qua; ở dashboard
+mới có nút **"⇄ App WebRTC"** để quay lại — 2 giao diện dùng chung 1 bảng màu
+(dark navy/gold, font Inter + JetBrains Mono) để cảm giác nhất quán.
+
+Luồng sử dụng dashboard mới:
 1. Tải file lên trình duyệt → server tự chia chunk, hash, và **tự làm seeder**.
 2. Bấm "Tải xuống" → server tạo 1 **Peer leecher mới**, tải thật qua giao thức
    TCP/swarm (không giả lập), tiến độ hiển thị real-time (polling 1s).
 3. Tải xong → tải file kết quả về máy qua trình duyệt.
 
-Vì đây vẫn là **peer thật** nói chuyện qua TCP, các peer chạy từ `cli.js` (dòng
-lệnh) trên máy khác có thể tham gia **cùng swarm** nếu trỏ đúng tracker — web UI
-và CLI peer cùng tồn tại trong 1 hệ sinh thái, không tách biệt.
+Vì đây vẫn là **peer thật** nói chuyện qua TCP (tracker riêng ở cổng 4000, không
+qua Express), các peer chạy từ `cli.js` (dòng lệnh) trên máy khác có thể tham
+gia **cùng swarm** nếu trỏ đúng tracker — web UI và CLI peer cùng tồn tại trong
+1 hệ sinh thái, không tách biệt.
+
+`web/server.js` vẫn được giữ lại như 1 cách chạy **độc lập** dashboard này (mount
+router ở `/` thay vì `/bittorrent`, cổng mặc định 5050) — hữu ích khi debug riêng
+phần BitTorrent mà không cần khởi động app WebRTC.
 
 ---
 
@@ -256,10 +275,19 @@ node harness/run-experiment.js harness/scenarios/baseline.json
 ```
 → Xem chi tiết ở [`02_HARNESS.md`](02_HARNESS.md).
 
-Muốn dùng **giao diện Web** thay vì CLI:
+Muốn dùng **giao diện Web** thay vì CLI: hệ BitTorrent-swarm đã được **gộp vào
+cùng server chính** (`server/index.js`, cổng 5000) dưới route `/bittorrent` —
+chỉ cần chạy 1 lệnh duy nhất:
 ```bash
-node web/server.js            # mặc định cổng 5000, tracker cổng 4000
-# mở trình duyệt: http://localhost:5000
+npm run dev            # (hoặc: node server/index.js) — cổng mặc định 5000
+```
+- App WebRTC gốc: **http://localhost:5000/**
+- Dashboard BitTorrent-swarm: **http://localhost:5000/bittorrent/** (có nút
+  "🧲 BitTorrent Engine" ở header app gốc để bấm chuyển qua lại)
+
+Muốn chạy dashboard BitTorrent **độc lập**, không kèm app WebRTC (vd để debug):
+```bash
+node web/server.js            # mặc định cổng 5050, tracker cổng 4000
 ```
 
 ---

@@ -96,9 +96,10 @@
 - **Hình:** bảng ✅ rút gọn từ `03_DANH_GIA_DE_BAI.md`.
 
 ### Slide 16 — Demo trực tiếp + Kết luận & hướng phát triển
-- **Nội dung demo:** mở `web/` (upload file → tự seed → bấm tải xuống → xem
-  tiến độ/tốc độ real-time) **và/hoặc** chạy `node harness/run-experiment.js
-  .../churn.json` để thấy log realtime + hash khớp.
+- **Nội dung demo:** `npm run dev` → mở `localhost:5000` (app WebRTC), bấm nút
+  "🧲 BitTorrent Engine" để sang `/bittorrent` (upload file → tự seed → bấm tải
+  xuống → xem tiến độ/tốc độ real-time) **và/hoặc** chạy
+  `node harness/run-experiment.js .../churn.json` để thấy log realtime + hash khớp.
 - **Kết luận:** đã đạt chuẩn; **hướng phát triển:** nâng cấp app WebRTC để peer
   tải xong tự re-upload (bước đầu có swarm trong browser), kịch bản "seed rời
   sớm", endgame mode, choke/unchoke (tit-for-tat).

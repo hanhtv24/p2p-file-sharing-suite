@@ -7,50 +7,90 @@ const fmtBytes = (b) => {
   const i = Math.floor(Math.log(b) / Math.log(k));
   return (b / k ** i).toFixed(i ? 1 : 0) + " " + sizes[i];
 };
+// Chuyển KB/s -> MB/s khi số quá lớn để hiển thị gọn trong cột hẹp
+// (vd "120773 KB/s" -> "118.0 MB/s"), tránh bị cắt/tràn chữ.
+const fmtRate = (kbps) => (kbps >= 1000 ? (kbps / 1024).toFixed(1) + " MB/s" : Math.round(kbps) + " KB/s");
 
 // Lưu snapshot lần poll trước để tính tốc độ tức thời (delta byte / delta thời gian).
 const prevSnapshot = new Map(); // peerId -> { bytesDown, bytesUp, t }
 
 async function loadConfig() {
-  const cfg = await fetch("/api/config").then((r) => r.json());
-  $("#config").textContent = `Tracker: ${cfg.trackerUrl} · chunk mặc định: ${fmtBytes(cfg.defaultChunkSize)}`;
+  const cfg = await fetch("api/config").then((r) => r.json());
+  $("#config").textContent = `${cfg.trackerUrl} · chunk mặc định ${fmtBytes(cfg.defaultChunkSize)}`;
 }
 
 async function loadTorrents() {
-  const torrents = await fetch("/api/torrents").then((r) => r.json());
+  const torrents = await fetch("api/torrents").then((r) => r.json());
   const tbody = $("#torrentTable tbody");
   tbody.innerHTML = "";
+  $("#torrentCount").textContent = torrents.length;
+  $("#torrentEmpty").style.display = torrents.length ? "none" : "block";
+  $("#torrentTable").style.display = torrents.length ? "table" : "none";
   for (const t of torrents) {
     const tr = document.createElement("tr");
     tr.innerHTML = `
-      <td>${escapeHtml(t.name)}</td>
+      <td class="truncate" title="${escapeHtml(t.name)}">${escapeHtml(t.name)}</td>
       <td>${fmtBytes(t.size)}</td>
       <td>${t.chunkCount}</td>
       <td class="mono">${t.infohash.slice(0, 12)}…</td>
-      <td><button class="secondary" data-download="${t.infohash}">⬇ Tải xuống (peer mới)</button></td>`;
+      <td class="actions">
+        <button class="secondary" data-download="${t.infohash}">⬇ Tải xuống</button>
+        <button class="secondary" data-seed="${t.infohash}" title="Bật lại seeder nếu swarm không còn ai giữ file (tải xuống bị kẹt 0%)">🌱 Seed lại</button>
+        <button class="danger" data-delete="${t.infohash}" title="Xoá torrent này (dừng mọi peer liên quan + xoá file gốc trên đĩa)">🗑 Xoá</button>
+      </td>`;
     tbody.appendChild(tr);
   }
   tbody.querySelectorAll("[data-download]").forEach((btn) => {
     btn.addEventListener("click", () => startDownload(btn.dataset.download, btn));
   });
+  tbody.querySelectorAll("[data-seed]").forEach((btn) => {
+    btn.addEventListener("click", () => reseed(btn.dataset.seed, btn));
+  });
+  tbody.querySelectorAll("[data-delete]").forEach((btn) => {
+    btn.addEventListener("click", () => deleteTorrent(btn.dataset.delete, btn));
+  });
+}
+
+async function reseed(infohash, btn) {
+  btn.disabled = true;
+  try {
+    await fetch(`api/torrents/${infohash}/seed`, { method: "POST" });
+    await loadPeers();
+  } finally {
+    btn.disabled = false;
+  }
+}
+
+async function deleteTorrent(infohash, btn) {
+  if (!confirm("Xoá torrent này? Mọi peer (seed/leech) đang phục vụ nó sẽ bị dừng, file gốc trên server sẽ bị xoá.")) return;
+  btn.disabled = true;
+  try {
+    await fetch(`api/torrents/${infohash}`, { method: "DELETE" });
+    await Promise.all([loadTorrents(), loadPeers()]);
+  } finally {
+    btn.disabled = false;
+  }
 }
 
 async function startDownload(infohash, btn) {
   btn.disabled = true;
   btn.textContent = "Đang khởi tạo…";
   try {
-    await fetch(`/api/torrents/${infohash}/download`, { method: "POST" });
+    await fetch(`api/torrents/${infohash}/download`, { method: "POST" });
     await loadPeers();
   } finally {
     btn.disabled = false;
-    btn.textContent = "⬇ Tải xuống (peer mới)";
+    btn.textContent = "⬇ Tải xuống";
   }
 }
 
 async function loadPeers() {
-  const list = await fetch("/api/peers").then((r) => r.json());
+  const list = await fetch("api/peers").then((r) => r.json());
   const tbody = $("#peerTable tbody");
   tbody.innerHTML = "";
+  $("#peerCount").textContent = list.length;
+  $("#peerEmpty").style.display = list.length ? "none" : "block";
+  $("#peerTable").style.display = list.length ? "table" : "none";
   const now = Date.now();
 
   for (const p of list) {
@@ -68,21 +108,45 @@ async function loadPeers() {
     const roleBadge = p.role === "seed" ? '<span class="badge seed">SEED</span>' : '<span class="badge leech">LEECH</span>';
     const doneBadge = p.complete ? '<span class="badge done">✓ xong</span>' : "";
 
+    // Cột tốc độ tải xuống: đang tải → tốc độ tức thời; đã xong → tốc độ TRUNG
+    // BÌNH cả quá trình (bytesDown/thời gian) thay vì để tụt về 0 gây hiểu lầm
+    // là "không tải được gì". Dùng ký hiệu "⌀" (trung bình) thay vì chữ "TB "
+    // để không tràn chữ ra ngoài ô hẹp — giải thích qua tooltip title.
+    let downCell = "-", downTitle = "";
+    if (p.role === "leech") {
+      if (!p.complete) {
+        downCell = fmtRate(downKBps);
+      } else if (p.ms > 0) {
+        downCell = "⌀ " + fmtRate((p.bytesDown / 1024) / (p.ms / 1000));
+        downTitle = "Tốc độ trung bình cả quá trình tải";
+      }
+    }
+    // Cột tốc độ upload: đang có người tải từ mình → tốc độ tức thời; nếu hiện
+    // tại không ai đang xin chunk (tốc độ tức thời = 0) nhưng đã từng phục vụ
+    // → hiện tổng dung lượng đã upload (ký hiệu "Σ"), tránh hiểu lầm "không hoạt động".
+    let upCell = "-", upTitle = "";
+    if (upKBps > 0) {
+      upCell = fmtRate(upKBps);
+    } else if (p.bytesUp > 0) {
+      upCell = "Σ " + fmtBytes(p.bytesUp);
+      upTitle = "Tổng dung lượng đã upload";
+    }
+
     const tr = document.createElement("tr");
     tr.innerHTML = `
-      <td>${roleBadge} ${doneBadge}</td>
-      <td class="mono">${p.peerId}</td>
-      <td>${escapeHtml(p.name)}</td>
-      <td>
+      <td><div class="role-cell">${roleBadge}${doneBadge}</div></td>
+      <td class="mono truncate" title="${p.peerId}">${p.peerId}</td>
+      <td class="truncate" title="${escapeHtml(p.name)}">${escapeHtml(p.name)}</td>
+      <td class="nowrap">
         <div class="progress"><div style="width:${p.percent}%"></div></div>
         <span class="progress-label">${p.have}/${p.chunkCount} (${p.percent}%)</span>
       </td>
-      <td>${p.role === "leech" && !p.complete ? downKBps.toFixed(0) + " KB/s" : "-"}</td>
-      <td>${p.bytesUp > 0 ? upKBps.toFixed(0) + " KB/s" : "-"}</td>
-      <td>${p.connections}</td>
-      <td>${p.sources}</td>
-      <td>
-        ${p.complete && p.role === "leech" ? `<a href="/api/peers/${p.id}/file"><button>Tải file</button></a>` : ""}
+      <td class="nowrap" title="${downTitle}">${downCell}</td>
+      <td class="nowrap" title="${upTitle}">${upCell}</td>
+      <td class="nowrap">${p.connections}</td>
+      <td class="nowrap">${p.sources}</td>
+      <td class="actions">
+        ${p.complete && p.role === "leech" ? `<a href="api/peers/${p.id}/file"><button>Tải file</button></a>` : ""}
         <button class="danger" data-stop="${p.id}">Dừng</button>
       </td>`;
     tbody.appendChild(tr);
@@ -90,7 +154,7 @@ async function loadPeers() {
 
   tbody.querySelectorAll("[data-stop]").forEach((btn) => {
     btn.addEventListener("click", async () => {
-      await fetch(`/api/peers/${btn.dataset.stop}/stop`, { method: "POST" });
+      await fetch(`api/peers/${btn.dataset.stop}/stop`, { method: "POST" });
       prevSnapshot.delete(btn.dataset.stop);
       await loadPeers();
     });
@@ -116,7 +180,7 @@ $("#uploadForm").addEventListener("submit", async (e) => {
   statusEl.textContent = "Đang tải lên & chia chunk…";
   statusEl.className = "status";
   try {
-    const res = await fetch("/api/torrents", { method: "POST", body: fd });
+    const res = await fetch("api/torrents", { method: "POST", body: fd });
     const data = await res.json();
     if (!res.ok) throw new Error(data.error || "lỗi không rõ");
     statusEl.textContent = `✓ Đã chia sẻ "${data.name}" — ${data.chunkCount} chunk. Đang seed.`;

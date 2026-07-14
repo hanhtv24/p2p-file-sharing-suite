@@ -118,10 +118,12 @@ Kết thúc, harness in bảng tóm tắt và ghi `harness/results/<tên>-<times
 vẽ biểu đồ).
 
 > **Lưu ý phân biệt `harness/` và `web/`:** harness dùng để **đo đạc tự động,
-> không có màn hình** (chạy CLI, xuất số liệu cho báo cáo). `web/server.js` là
-> **dashboard tương tác** cho người dùng cuối (upload, bấm tải xuống, xem tiến độ)
-> — dùng cùng lõi `Peer`/`Tracker` nhưng phục vụ mục đích demo trực quan, không
-> xuất CSV. Cả hai có thể chạy song song vì mỗi cái tự mở tracker/cổng riêng.
+> không có màn hình** (chạy CLI, xuất số liệu cho báo cáo). `web/` (qua `web/api.js`,
+> gắn vào `server/index.js` ở route `/bittorrent`, cổng 5000 — chạy bằng `npm run dev`)
+> là **dashboard tương tác** cho người dùng cuối (upload, bấm tải xuống, xem tiến độ)
+> — dùng cùng lõi `Peer`/`torrent` nhưng phục vụ mục đích demo trực quan, không
+> xuất CSV. Harness dùng tracker riêng (cổng trong file kịch bản, vd 4001) nên
+> chạy song song với web/app chính (tracker cổng 4000) không xung đột.
 
 Mã thoát (exit code): `0` nếu **mọi leecher tải xong và hash khớp**, `1` nếu có
 lỗi → tiện tích hợp CI/tự kiểm.

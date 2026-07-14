@@ -43,7 +43,7 @@ Browser-based peer-to-peer file sharing over WebRTC DataChannel with SHA-256 int
 
 ```
 Browser A ──┐
-Browser B ──┼── WebSocket (SDP Offer/Answer + ICE) ──► Signaling Server :3005
+Browser B ──┼── WebSocket (SDP Offer/Answer + ICE) ──► Signaling Server :5000
 Browser C ──┘                                          (Node.js + Socket.io)
 
 Sau handshake:
@@ -85,7 +85,12 @@ npm install
 npm run dev
 ```
 
-Truy cập `http://localhost:3005`
+Truy cập `http://localhost:5000`
+
+> Repo này còn có một hệ chia sẻ file P2P kiểu **BitTorrent-swarm** (tracker,
+> chunk đa nguồn, rarest-first) chạy chung server ở route
+> `http://localhost:5000/bittorrent/` — bấm nút "🧲 BitTorrent Engine" trên
+> header để chuyển qua. Xem chi tiết trong [`docs/`](docs/README.md).
 
 ---
 
@@ -93,7 +98,7 @@ Truy cập `http://localhost:3005`
 
 **Kết nối peer**
 
-Mở `http://localhost:3005` trên nhiều tab hoặc nhiều máy cùng mạng. Mỗi tab nhận một Peer ID. Nhấn vào peer trong danh sách hoặc nhập Peer ID thủ công → nhấn Kết nối.
+Mở `http://localhost:5000` trên nhiều tab hoặc nhiều máy cùng mạng. Mỗi tab nhận một Peer ID. Nhấn vào peer trong danh sách hoặc nhập Peer ID thủ công → nhấn Kết nối.
 
 **Gửi file**
 
@@ -117,7 +122,7 @@ Sau khi hoàn tất, badge SHA-256 xác nhận toàn vẹn của toàn bộ file
 npm run dev
 
 # Máy B, C truy cập
-http://<IP-máy-A>:3005
+http://<IP-máy-A>:5000
 ```
 
 ---

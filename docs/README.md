@@ -2,14 +2,19 @@
 
 Đọc theo thứ tự:
 
-1. [`01_PHAN_TICH_DU_AN.md`](01_PHAN_TICH_DU_AN.md) — Phân tích dự án cho người
-   mới: đề bài, khái niệm BitTorrent, app WebRTC hiện có và vì sao chưa đủ, thiết
-   kế hệ thống mới, cách chạy (kể cả web dashboard).
+0. [`06_GIOI_THIEU_DU_AN.md`](06_GIOI_THIEU_DU_AN.md) — **Bắt đầu từ đây.** Văn
+   giới thiệu tổng quan (dùng làm mở đầu báo cáo): app WebRTC có chức năng gì,
+   hệ BitTorrent-swarm thêm mới những gì, vì sao tách thành 2 hệ riêng.
+1. [`01_PHAN_TICH_DU_AN.md`](01_PHAN_TICH_DU_AN.md) — Phân tích kỹ thuật chi
+   tiết: đề bài, khái niệm BitTorrent, kiến trúc, wire protocol, cách chạy.
 2. [`02_HARNESS.md`](02_HARNESS.md) — Khung thử nghiệm: vì sao cần, kiến trúc,
    cách chạy 4 kịch bản, số liệu đã đo, cách đưa vào báo cáo.
 3. [`03_DANH_GIA_DE_BAI.md`](03_DANH_GIA_DE_BAI.md) — Đối chiếu từng yêu cầu đề
    bài (app WebRTC vs hệ mới), kết luận đạt chuẩn.
 4. [`04_SLIDE_OUTLINE.md`](04_SLIDE_OUTLINE.md) — Dàn ý 16 slide thuyết trình.
+5. [`05_HUONG_DAN_DEMO.md`](05_HUONG_DAN_DEMO.md) — Kịch bản demo trực tiếp trên
+   giao diện cho giảng viên: từng bước bấm gì, quan sát gì, chứng minh chức
+   năng nào của đề bài.
 
 ## Cây thư mục chính
 ```
@@ -25,15 +30,19 @@ harness/             # Khung thử nghiệm tự động
   gen-file.js          sinh file test
   scenarios/*.json     baseline / scaling / rarest-vs-random / churn
 web/                 # Giao diện Web cho hệ thống mới (upload→seed, tải xuống, tiến độ real-time)
-  server.js            backend: tracker + Peer chạy trong tiến trình, API REST
-  public/               index.html / app.js / style.css — bảng điều khiển
-docs/                # 4 tài liệu này
-server/, public/     # App WebRTC hiện có (đa peer, SHA-256, chunk-map — giữ lại để đối chiếu)
+  api.js                Router Express dùng chung: gắn vào server chính (/bittorrent) hoặc chạy độc lập
+  server.js             chạy dashboard ĐỘC LẬP (mount api.js ở "/", cổng 5050) — dùng khi debug riêng
+  public/               index.html / app.js / style.css — bảng điều khiển (cùng bảng màu với app WebRTC)
+docs/                # 6 tài liệu này
+server/, public/     # App WebRTC hiện có (đa peer, SHA-256, chunk-map) — server/index.js giờ
+                     # gắn thêm route /bittorrent (qua web/api.js), cổng mặc định đã đổi 3005 → 5000
 ```
 
 ## Chạy thử nhanh
 ```bash
-node harness/run-experiment.js harness/scenarios/baseline.json   # kịch bản tự động
-node web/server.js                                               # dashboard: http://localhost:5000
-npm run dev                                                       # app WebRTC hiện có: http://localhost:3005
+npm run dev                                                      # 1 lệnh duy nhất, cổng 5000:
+                                                                  #   http://localhost:5000/            app WebRTC
+                                                                  #   http://localhost:5000/bittorrent/  dashboard mới
+node harness/run-experiment.js harness/scenarios/baseline.json   # kịch bản tự động (không cần web)
+node web/server.js                                               # dashboard BitTorrent độc lập: http://localhost:5050
 ```

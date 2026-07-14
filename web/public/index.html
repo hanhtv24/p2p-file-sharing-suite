@@ -3,58 +3,112 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>P2P File Share — Bảng điều khiển</title>
-  <link rel="stylesheet" href="/style.css" />
+  <title>BitTorrent Engine — Bảng điều khiển</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="style.css" />
 </head>
 <body>
-  <header>
-    <h1>🔗 Hệ thống chia sẻ file P2P <span class="sub">(mô phỏng BitTorrent)</span></h1>
-    <div id="config" class="config">đang tải cấu hình…</div>
-  </header>
+  <div id="app">
+    <header>
+      <div class="logo">
+        <div class="logo-icon">🧲</div>
+        <div>
+          <div class="logo-title">BitTorrent Engine</div>
+          <div class="logo-sub">Tracker · Swarm · SHA-256 Verified</div>
+        </div>
+      </div>
 
-  <main>
-    <section class="card">
-      <h2>1. Chia sẻ file mới</h2>
-      <p class="hint">File được chia thành chunk, tính hash SHA-256 từng chunk, và server sẽ tự làm <b>seeder</b> ngay.</p>
-      <form id="uploadForm">
-        <input type="file" id="fileInput" required />
-        <label class="inline">
-          Kích thước chunk (byte):
-          <input type="number" id="chunkSize" value="65536" min="1024" step="1024" />
-        </label>
-        <button type="submit">Tải lên &amp; chia sẻ</button>
-        <span id="uploadStatus" class="status"></span>
-      </form>
-    </section>
+      <div class="badge" id="config-badge">
+        <div class="badge-dot"></div>
+        <span id="config">đang tải cấu hình…</span>
+      </div>
 
-    <section class="card">
-      <h2>2. Danh sách torrent</h2>
-      <table id="torrentTable">
-        <thead>
-          <tr><th>Tên file</th><th>Kích thước</th><th>Số chunk</th><th>Infohash</th><th></th></tr>
-        </thead>
-        <tbody></tbody>
-      </table>
-    </section>
+      <div class="header-spacer"></div>
 
-    <section class="card">
-      <h2>3. Peer đang chạy (real-time)</h2>
-      <table id="peerTable">
-        <thead>
-          <tr>
-            <th>Vai trò</th><th>Peer ID</th><th>File</th><th>Tiến độ</th>
-            <th>↓ tốc độ</th><th>↑ tốc độ</th><th>Kết nối</th><th>Nguồn</th><th></th>
-          </tr>
-        </thead>
-        <tbody></tbody>
-      </table>
-    </section>
-  </main>
+      <a href="/" class="btn btn-ghost" title="Quay lại app chia sẻ file WebRTC">⇄ App WebRTC</a>
+    </header>
 
-  <footer>
-    Đồ án Hệ thống phân tán — Chia sẻ file P2P. Xem thêm tài liệu trong <code>docs/</code>.
-  </footer>
+    <main>
+      <section class="panel">
+        <div class="panel-header"><h2>1. Chia sẻ file mới</h2></div>
+        <div class="panel-body">
+          <p class="hint">File được chia thành chunk, tính hash SHA-256 từng chunk, và server sẽ tự làm <b>seeder</b> ngay.</p>
+          <form id="uploadForm">
+            <input type="file" id="fileInput" required />
+            <label class="inline">
+              Kích thước chunk (byte)
+              <input type="number" id="chunkSize" value="65536" min="1024" step="1024" class="input-mono" />
+            </label>
+            <button type="submit" class="btn btn-primary">Tải lên &amp; chia sẻ</button>
+            <span id="uploadStatus" class="status"></span>
+          </form>
+        </div>
+      </section>
 
-  <script src="/app.js"></script>
+      <section class="panel">
+        <div class="panel-header">
+          <h2>2. Danh sách torrent</h2>
+          <span class="count-badge" id="torrentCount">0</span>
+        </div>
+        <div class="table-wrap">
+          <table id="torrentTable">
+            <colgroup>
+              <col style="width:30%" /><col style="width:12%" /><col style="width:10%" />
+              <col style="width:16%" /><col style="width:32%" />
+            </colgroup>
+            <thead>
+              <tr>
+                <th class="col-name">Tên file</th>
+                <th class="col-size">Kích thước</th>
+                <th class="col-num">Số chunk</th>
+                <th class="col-hash">Infohash</th>
+                <th class="col-action"></th>
+              </tr>
+            </thead>
+            <tbody></tbody>
+          </table>
+          <p class="empty-hint" id="torrentEmpty">Chưa có torrent nào — tải file lên ở mục 1.</p>
+        </div>
+      </section>
+
+      <section class="panel">
+        <div class="panel-header">
+          <h2>3. Peer đang chạy (real-time)</h2>
+          <span class="count-badge" id="peerCount">0</span>
+        </div>
+        <div class="table-wrap">
+          <table id="peerTable">
+            <colgroup>
+              <col style="width:8%" /><col style="width:10%" /><col style="width:15%" />
+              <col style="width:14%" /><col style="width:12%" /><col style="width:12%" />
+              <col style="width:7%" /><col style="width:7%" /><col style="width:15%" />
+            </colgroup>
+            <thead>
+              <tr>
+                <th class="col-role">Vai trò</th>
+                <th class="col-id">Peer ID</th>
+                <th class="col-name">File</th>
+                <th class="col-progress">Tiến độ</th>
+                <th class="col-speed">↓ tốc độ</th>
+                <th class="col-speed">↑ tốc độ</th>
+                <th class="col-num">Kết nối</th>
+                <th class="col-num">Nguồn</th>
+                <th class="col-action"></th>
+              </tr>
+            </thead>
+            <tbody></tbody>
+          </table>
+          <p class="empty-hint" id="peerEmpty">Chưa có peer nào đang chạy.</p>
+        </div>
+      </section>
+    </main>
+
+    <footer>
+      Đồ án Hệ thống phân tán — Chia sẻ file P2P. Xem thêm tài liệu trong <code>docs/</code>.
+    </footer>
+  </div>
+
+  <script src="app.js"></script>
 </body>
 </html>

@@ -20,6 +20,8 @@ const {
   getRandomAnimal,
   parseUserAgent,
 } = require("./utils");
+const { startTracker } = require("../bittorrent/tracker/tracker");
+const { createBittorrentRouter } = require("../web/api");
 const app = express();
 const server = http.createServer(app);
 const io = new Server(server, {
@@ -227,9 +229,36 @@ function broadcastPeerList() {
   io.emit("peer-list", peerList);
 }
 
-const PORT = process.env.PORT || 3005;
-server.listen(PORT, () => {
-  console.log(
-    `║   Server đang chạy tại: http://localhost:${PORT}             ║`
-  );
+const PORT = process.env.PORT || 5000;
+const TRACKER_PORT = process.env.TRACKER_PORT || 4000;
+
+// Gộp hệ BitTorrent-swarm (bittorrent/) vào cùng server này dưới route
+// /bittorrent — tracker riêng (cổng 4000) vẫn cần vì peer nói chuyện qua TCP,
+// không qua Express; nhưng dashboard + API điều khiển thì dùng chung port 5000.
+let bittorrentRouter;
+async function startBittorrent() {
+  const { server: trackerServer } = await startTracker(TRACKER_PORT);
+  const trackerUrl = `http://localhost:${TRACKER_PORT}`;
+  bittorrentRouter = createBittorrentRouter({ trackerUrl });
+  app.use("/bittorrent", bittorrentRouter);
+  return trackerServer;
+}
+
+startBittorrent().then((trackerServer) => {
+  server.listen(PORT, () => {
+    console.log(
+      `║   Server đang chạy tại: http://localhost:${PORT}             ║`
+    );
+    console.log(
+      `║   Hệ BitTorrent-swarm : http://localhost:${PORT}/bittorrent/  ║`
+    );
+  });
+
+  const shutdown = () => {
+    bittorrentRouter?.stopAllPeers();
+    trackerServer.close();
+    process.exit(0);
+  };
+  process.on("SIGINT", shutdown);
+  process.on("SIGTERM", shutdown);
 });

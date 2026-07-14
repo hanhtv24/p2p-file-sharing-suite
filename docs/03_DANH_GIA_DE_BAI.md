@@ -45,7 +45,7 @@ còn lại vẫn hoàn tất, hash khớp.
 |---------|------------------|-----------|
 | Thuật toán **rarest-first** | ✅ có (kèm cờ chuyển sang random để so sánh) | `src/piece-picker.js` |
 | Tải song song nhiều peer tối ưu | ✅ giới hạn `MAX_INFLIGHT_PER_PEER`, chia đều theo bitfield | `peer.js _schedule()` |
-| Giao diện web / GUI | ✅ **2 GUI trong repo**: app WebRTC gốc (chunk-map, theme, stats) **và** dashboard mới `web/` (upload → auto-seed, tải xuống 1 click, tiến độ/tốc độ real-time cho đúng hệ swarm) | `public/`, `web/public/`, `web/server.js` |
+| Giao diện web / GUI | ✅ **2 GUI, gộp chung 1 cổng (5000)**: app WebRTC gốc ở `/` (chunk-map, theme, stats) **và** dashboard mới ở `/bittorrent` (upload → auto-seed, tải xuống 1 click, tiến độ/tốc độ real-time cho đúng hệ swarm), có nút bấm chuyển qua lại, dùng chung bảng màu | `public/`, `web/public/`, `web/api.js`, `server/index.js` |
 | Thống kê tốc độ upload/download | ✅ bytesUp/Down, throughputKBps, in định kỳ + xuất CSV + hiển thị real-time trên `web/` | `peer _printStats`, harness CSV, `web/public/app.js` |
 | Mô phỏng peer join/leave (churn) | ✅ harness kill/restart theo lịch | `harness churn.json` |
 
